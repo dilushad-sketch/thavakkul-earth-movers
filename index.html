@@ -28,7 +28,7 @@
     <p class="sub">Access vehicle records, work accounts, Horizia settlement and the private owner/client chat.</p>
     <div class="role-picks" aria-label="Choose login type">
       <button class="role-pick active" type="button" data-login-role="owner">Owner / Admin<span>Full management access</span></button>
-      <button class="role-pick" type="button" data-login-role="client">Client · Horizia<span>View accounts + chat</span></button>
+      <button class="role-pick" type="button" data-login-role="client">Mubashir · Client<span>View accounts + chat</span></button>
     </div>
     <form id="loginForm" class="login-fields">
       <div class="field"><label for="loginUsername">Username</label><input id="loginUsername" autocomplete="username" required placeholder="Enter username" /></div>
@@ -36,7 +36,7 @@
       <div id="loginError" class="login-error" role="alert">Username or password is incorrect.</div>
       <button class="btn primary" style="width:100%;padding:13px" type="submit">Sign in →</button>
     </form>
-    <div class="login-warning"><strong>Prototype notice:</strong> this downloaded version is a local preview. Its demo login and messages are stored on this device only; they are not yet protected or synced by a server. Do not publish it with demo credentials. Final live use needs server authentication, database permissions and cloud image storage.</div>
+    <div class="login-warning"><strong>Prototype notice:</strong> this public preview stores demo sign-ins and records in each browser only; they are not secure accounts and do not sync between devices. Do not enter real business data. Real shared use needs</div>
   </div>
 </div>
 
@@ -206,7 +206,7 @@ let data={vehicles:[],records:[],openingBalances:[],wagePayments:[]};
 let partnershipEntryMode=false;
 let currentUser=null;
 let selectedLoginRole='owner';
-const DEMO_ACCOUNTS={owner:{username:'owner',password:'Owner@12345',label:'Owner / Admin'},client:{username:'horizia',password:'Horizia@12345',label:'Client · Horizia'}};
+const DEMO_ACCOUNTS={owner:{username:'owner',password:'Owner@12345',label:'Owner / Admin'},client:{username:'mubashir',password:'Horizia@12345',label:'Mubashir · Client'}};
 try{const saved=localStorage.getItem(STORE);if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed.vehicles)&&Array.isArray(parsed.records)){data={...parsed,openingBalances:Array.isArray(parsed.openingBalances)?parsed.openingBalances:[],wagePayments:Array.isArray(parsed.wagePayments)?parsed.wagePayments:[]};}}}catch(e){console.warn('Could not load saved app data',e)}
 const $=id=>document.getElementById(id);
 const isOwner=()=>currentUser?.role==='owner';
@@ -294,7 +294,7 @@ $('wagePaymentForm').addEventListener('submit',e=>{e.preventDefault();if(!isOwne
 
 // Demo role-based sign-in. This is a local UI preview, not server-side security.
 function applyRole(role){
-  if(role&&DEMO_ACCOUNTS[role]){currentUser={role,...DEMO_ACCOUNTS[role]};rememberRole(role);$('loginGate').hidden=true;$('mainApp').classList.add('authenticated');document.body.classList.toggle('client-mode',role==='client');document.body.classList.toggle('owner-mode',role==='owner');$('sessionName').textContent=DEMO_ACCOUNTS[role].label;$('chatUserLine').textContent=`Signed in as ${DEMO_ACCOUNTS[role].label} · conversation with ${role==='owner'?'Horizia':'Thavakkul Earth Movers'}`;}
+  if(role&&DEMO_ACCOUNTS[role]){currentUser={role,...DEMO_ACCOUNTS[role]};rememberRole(role);$('loginGate').hidden=true;$('mainApp').classList.add('authenticated');document.body.classList.toggle('client-mode',role==='client');document.body.classList.toggle('owner-mode',role==='owner');$('sessionName').textContent=DEMO_ACCOUNTS[role].label;$('chatUserLine').textContent=`Signed in as ${DEMO_ACCOUNTS[role].label} · conversation with ${role==='owner'?'Mubashir':'Thavakkul Earth Movers'}`;}
   else{currentUser=null;rememberRole(null);$('loginGate').hidden=false;$('mainApp').classList.remove('authenticated');document.body.classList.remove('client-mode','owner-mode');}
   const ownerIds=['topAddWork','welcomeAdd','qaWork','recordsAdd','vehiclesAdd','qaVehicle','partnershipAddWork','addWagePayment','downloadBackup','chooseRestore'];
   ownerIds.forEach(idv=>{const el=$(idv);if(el)el.setAttribute('data-owner-only','');});
@@ -318,7 +318,7 @@ function fallbackChats(){try{const value=localStorage.getItem(CHAT_FALLBACK_KEY)
 async function getChatMessages(){try{const db=await openChatDb();return await new Promise((resolve,reject)=>{const req=db.transaction(CHAT_STORE,'readonly').objectStore(CHAT_STORE).getAll();req.onsuccess=()=>resolve(req.result||[]);req.onerror=()=>reject(req.error||new Error('Could not read chat'));});}catch{return fallbackChats();}}
 async function putChatMessage(message){try{const db=await openChatDb();await new Promise((resolve,reject)=>{const tx=db.transaction(CHAT_STORE,'readwrite');tx.objectStore(CHAT_STORE).put(message);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error||new Error('Could not save chat message'));tx.onabort=()=>reject(tx.error||new Error('Chat save cancelled'));});}catch{const arr=fallbackChats();arr.push(message);chatMemory=arr;try{localStorage.setItem(CHAT_FALLBACK_KEY,JSON.stringify(arr));}catch{/* in-memory fallback for restricted browser contexts */}}}
 function safeChatDate(value){try{return new Date(value).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});}catch{return '';}}
-async function renderChat(){if(!$('chatMessages'))return;const messages=(await getChatMessages()).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));if(!messages.length){$('chatMessages').innerHTML='<div class="chat-empty"><div class="emoji">💬</div><strong>No messages yet</strong><br>Start the conversation by sending a message or site photo.</div>';return;}$('chatMessages').innerHTML=messages.map(m=>{const mine=currentUser&&m.fromRole===currentUser.role;const name=m.fromRole==='owner'?'Thavakkul · Owner':'Horizia · Client';return `<div class="chat-row ${mine?'mine':''}"><div class="chat-meta"><strong>${esc(name)}</strong><span>${esc(safeChatDate(m.createdAt))}</span></div><div class="chat-bubble">${m.text?esc(m.text):''}${m.imageData?`<img class="chat-image" src="${m.imageData}" alt="Image attachment sent in chat" loading="lazy" />`:''}</div></div>`;}).join('');$('chatMessages').scrollTop=$('chatMessages').scrollHeight;}
+async function renderChat(){if(!$('chatMessages'))return;const messages=(await getChatMessages()).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt)));if(!messages.length){$('chatMessages').innerHTML='<div class="chat-empty"><div class="emoji">💬</div><strong>No messages yet</strong><br>Start the conversation by sending a message or site photo.</div>';return;}$('chatMessages').innerHTML=messages.map(m=>{const mine=currentUser&&m.fromRole===currentUser.role;const name=m.fromRole==='owner'?'Thavakkul · Owner':'Mubashir · Client';return `<div class="chat-row ${mine?'mine':''}"><div class="chat-meta"><strong>${esc(name)}</strong><span>${esc(safeChatDate(m.createdAt))}</span></div><div class="chat-bubble">${m.text?esc(m.text):''}${m.imageData?`<img class="chat-image" src="${m.imageData}" alt="Image attachment sent in chat" loading="lazy" />`:''}</div></div>`;}).join('');$('chatMessages').scrollTop=$('chatMessages').scrollHeight;}
 function resetChatImage(){$('chatImageInput').value='';$('chatImagePreview').hidden=true;$('chatPreviewImage').removeAttribute('src');pendingChatImage=null;}
 function compressChatImage(file){return new Promise((resolve,reject)=>{if(!file||!file.type.startsWith('image/')){reject(new Error('Choose an image file.'));return;}if(file.size>12*1024*1024){reject(new Error('Image must be smaller than 12 MB before processing.'));return;}const reader=new FileReader();reader.onerror=()=>reject(new Error('Could not read image.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('This image format could not be opened.'));img.onload=()=>{const max=1280,scale=Math.min(1,max/Math.max(img.naturalWidth,img.naturalHeight));const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);let dataUrl;try{dataUrl=canvas.toDataURL('image/jpeg',.76);}catch{reject(new Error('Could not process that image.'));return;}resolve({dataUrl,name:file.name||'image.jpg',size:dataUrl.length});};img.src=reader.result;};reader.readAsDataURL(file);});}
 $('chatAttachBtn').addEventListener('click',()=>{if(!currentUser){toast('Sign in to use chat.');return;}$('chatImageInput').click();});
